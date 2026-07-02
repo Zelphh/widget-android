@@ -1,0 +1,52 @@
+package com.tartari.cajuwidget.notification
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
+
+class NotificationParserTest {
+
+    @Test
+    fun `extrai valor de notificacao de compra`() {
+        assertEquals(
+            23_50L,
+            NotificationParser.extrairValorGasto("Compra aprovada de R$ 23,50 no RESTAURANTE X"),
+        )
+    }
+
+    @Test
+    fun `aceita valor sem espaco apos o cifrao`() {
+        assertEquals(
+            9_90L,
+            NotificationParser.extrairValorGasto("Você usou R$9,90 em PADARIA"),
+        )
+    }
+
+    @Test
+    fun `aceita valores com separador de milhar`() {
+        assertEquals(
+            1_234_56L,
+            NotificationParser.extrairValorGasto("Pagamento de R$ 1.234,56 aprovado"),
+        )
+    }
+
+    @Test
+    fun `ignora recarga de beneficio`() {
+        assertNull(NotificationParser.extrairValorGasto("Recarga de R$ 660,00 recebida no seu Caju"))
+    }
+
+    @Test
+    fun `ignora estorno`() {
+        assertNull(NotificationParser.extrairValorGasto("Estorno de compra de R$ 23,50"))
+    }
+
+    @Test
+    fun `ignora texto sem palavra de gasto`() {
+        assertNull(NotificationParser.extrairValorGasto("Seu saldo é R$ 120,00"))
+    }
+
+    @Test
+    fun `ignora texto sem valor`() {
+        assertNull(NotificationParser.extrairValorGasto("Compra aprovada"))
+    }
+}
