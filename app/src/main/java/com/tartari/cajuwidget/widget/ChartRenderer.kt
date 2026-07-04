@@ -70,15 +70,15 @@ object ChartRenderer {
 
         canvas.drawLine(0f, zeroY, larguraPx.toFloat(), zeroY, paintLinha)
 
-        // Rótulos esparsos no eixo X (dia do mês): 1, 5, 10, ... e hoje.
+        // Rótulo do dia do mês em todos os pontos do eixo X.
+        // Tamanho do texto limitado à largura de cada barra, para não sobrepor
+        // os vizinhos quando o mês avança e há mais pontos no gráfico.
+        paintTexto.textSize = textoAltura.coerceAtMost(passo * 0.62f)
         val yTexto = alturaPx - padding
         serie.forEachIndexed { i, ponto ->
             val diaDoMes = ponto.data.dayOfMonth
-            val ultimo = i == n - 1
-            if (diaDoMes == 1 || diaDoMes % 5 == 0 || ultimo) {
-                val x = i * passo + passo / 2
-                canvas.drawText(diaDoMes.toString(), x, yTexto, paintTexto)
-            }
+            val x = i * passo + passo / 2
+            canvas.drawText(diaDoMes.toString(), x, yTexto, paintTexto)
         }
 
         return bitmap

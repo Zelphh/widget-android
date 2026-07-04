@@ -5,6 +5,7 @@
     <string name="descricao_widget">Saldo diário do vale-alimentação em gráfico de barras</string>
     <string name="descricao_grafico">Gráfico de barras do saldo diário</string>
     <string name="titulo_lancamento">Lançar gasto</string>
+    <string name="rotulo_data">Selecionar data do gasto</string>
     <string name="dica_valor">Valor (ex.: 23,50)</string>
     <string name="salvar">Salvar</string>
     <string name="gasto_salvo">Gasto salvo</string>

@@ -1,6 +1,7 @@
 package com.tartari.cajuwidget.ui
 
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -14,6 +15,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * Tela leve (estilo diálogo) para lançamento manual de gasto — fallback
@@ -22,13 +26,19 @@ import kotlinx.coroutines.withContext
 class LancamentoManualActivity : Activity() {
 
     private val escopo = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var dataSelecionada: LocalDate = LocalDate.now()
+    private val formatoData = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_lancamento_manual)
 
         val campoValor = findViewById<EditText>(R.id.campo_valor)
+        val botaoData = findViewById<Button>(R.id.botao_data)
         val botaoSalvar = findViewById<Button>(R.id.botao_salvar)
+
+        atualizarTextoData(botaoData)
+        botaoData.setOnClickListener { abrirSeletorData(botaoData) }
 
         botaoSalvar.setOnClickListener {
             val valor = parseValorCentavos(campoValor.text.toString())
@@ -40,7 +50,7 @@ class LancamentoManualActivity : Activity() {
             escopo.launch {
                 withContext(Dispatchers.IO) {
                     GastoRepository.get(applicationContext)
-                        .salvarGasto(valor, Origem.MANUAL)
+                        .salvarGasto(valor, Origem.MANUAL, dataSelecionada)
                 }
                 WidgetUpdateScheduler.atualizarAgora(applicationContext)
                 Toast.makeText(
@@ -53,7 +63,32 @@ class LancamentoManualActivity : Activity() {
         }
     }
 
+    private fun atualizarTextoData(botaoData: Button) {
+        botaoData.text = dataSelecionada.format(formatoData)
+    }
+
+    private fun abrirSeletorData(botaoData: Button) {
+        val limites = limitesData(LocalDate.now())
+        DatePickerDialog(
+            this,
+            { _, ano, mesZeroBased, diaDoMes ->
+                dataSelecionada = LocalDate.of(ano, mesZeroBased + 1, diaDoMes)
+                atualizarTextoData(botaoData)
+            },
+            dataSelecionada.year, dataSelecionada.monthValue - 1, dataSelecionada.dayOfMonth,
+        ).apply {
+            datePicker.minDate = limites.start.paraEpocaMillis()
+            datePicker.maxDate = limites.endInclusive.paraEpocaMillis()
+        }.show()
+    }
+
     companion object {
+        /** Intervalo de datas permitido para backfill: 1º do mês corrente até hoje. */
+        fun limitesData(hoje: LocalDate): ClosedRange<LocalDate> = hoje.withDayOfMonth(1)..hoje
+
+        private fun LocalDate.paraEpocaMillis(): Long =
+            atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
         /** Aceita "12,34", "12.34", "12" → centavos. */
         fun parseValorCentavos(entrada: String): Long? {
             val normalizado = entrada.trim()

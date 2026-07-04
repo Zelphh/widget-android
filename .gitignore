@@ -4,3 +4,6 @@ local.properties
 .idea/
 *.iml
 .kotlin/
+CLAUDE.md
+.claude
+COMANDOS.md
