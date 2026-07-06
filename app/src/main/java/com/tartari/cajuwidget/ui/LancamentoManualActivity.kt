@@ -42,7 +42,7 @@ class LancamentoManualActivity : Activity() {
 
         botaoSalvar.setOnClickListener {
             val valor = parseValorCentavos(campoValor.text.toString())
-            if (valor == null || valor <= 0) {
+            if (valor == null || valor == 0L) {
                 campoValor.error = getString(R.string.erro_valor_invalido)
                 return@setOnClickListener
             }
@@ -89,14 +89,18 @@ class LancamentoManualActivity : Activity() {
         private fun LocalDate.paraEpocaMillis(): Long =
             atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-        /** Aceita "12,34", "12.34", "12" → centavos. */
+        /**
+         * Aceita "12,34", "12.34", "12" → centavos. Aceita sinal negativo
+         * ("-12,34") para permitir corrigir manualmente o saldo real do
+         * cartão quando ele desalinha do valor real.
+         */
         fun parseValorCentavos(entrada: String): Long? {
-            val normalizado = entrada.trim()
-                .removePrefix("R$").trim()
-                .replace(".", ",")
+            val semPrefixo = entrada.trim().removePrefix("R$").trim()
+            val negativo = semPrefixo.startsWith("-")
+            val normalizado = semPrefixo.removePrefix("-").trim().replace(".", ",")
             if (normalizado.isEmpty()) return null
             val partes = normalizado.split(",")
-            return try {
+            val valorAbsoluto = try {
                 when (partes.size) {
                     1 -> partes[0].toLong() * 100
                     2 -> partes[0].toLong() * 100 + partes[1].padEnd(2, '0').take(2).toLong()
@@ -104,7 +108,8 @@ class LancamentoManualActivity : Activity() {
                 }
             } catch (e: NumberFormatException) {
                 null
-            }
+            } ?: return null
+            return if (negativo) -valorAbsoluto else valorAbsoluto
         }
     }
 }

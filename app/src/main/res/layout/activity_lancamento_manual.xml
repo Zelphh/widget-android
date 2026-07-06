@@ -28,7 +28,7 @@
         android:autofillHints=""
         android:hint="@string/dica_valor"
         android:importantForAutofill="no"
-        android:inputType="numberDecimal"
+        android:inputType="numberSigned|numberDecimal"
         android:minHeight="56dp"
         android:textSize="18sp" />
 

@@ -10,12 +10,38 @@ android {
     namespace = "com.tartari.cajuwidget"
     compileSdk = 36
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.tartari.cajuwidget"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        // Saldo real do cartão no momento da instalação, em centavos.
+        // Prioridade: -PsaldoInicialCentavos=... > env SALDO_INICIAL_CENTAVOS > "0".
+        val saldoInicialCentavos: Long =
+            ((project.findProperty("saldoInicialCentavos") as String?)
+                ?: System.getenv("SALDO_INICIAL_CENTAVOS")
+                ?: "0")
+                .trim()
+                .toLongOrNull()
+                ?: error("saldoInicialCentavos / SALDO_INICIAL_CENTAVOS deve ser um inteiro em centavos")
+        buildConfigField("long", "SALDO_INICIAL_CENTAVOS", "${saldoInicialCentavos}L")
+
+        // Valor recebido por dia útil no vale, em centavos.
+        // Prioridade: -PvalorDiarioCentavos=... > env VALOR_DIARIO_CENTAVOS > "3000" (R$30,00).
+        val valorDiarioCentavos: Long =
+            ((project.findProperty("valorDiarioCentavos") as String?)
+                ?: System.getenv("VALOR_DIARIO_CENTAVOS")
+                ?: "3000")
+                .trim()
+                .toLongOrNull()
+                ?: error("valorDiarioCentavos / VALOR_DIARIO_CENTAVOS deve ser um inteiro em centavos")
+        buildConfigField("long", "VALOR_DIARIO_CENTAVOS", "${valorDiarioCentavos}L")
     }
 
     buildTypes {

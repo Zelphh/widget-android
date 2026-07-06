@@ -33,12 +33,13 @@ object SaldoCalculator {
         ate: LocalDate,
         gastosPorDia: Map<LocalDate, Long>,
         feriados: Set<LocalDate> = emptySet(),
+        creditoDiaUtilCentavos: Long = CREDITO_DIA_UTIL_CENTAVOS,
     ): List<SaldoDia> {
         val serie = ArrayList<SaldoDia>(ate.dayOfMonth)
         var saldo = 0L
         var dia = ate.withDayOfMonth(1)
         while (!dia.isAfter(ate)) {
-            if (ehDiaUtil(dia, feriados)) saldo += CREDITO_DIA_UTIL_CENTAVOS
+            if (ehDiaUtil(dia, feriados)) saldo += creditoDiaUtilCentavos
             saldo -= gastosPorDia[dia] ?: 0L
             serie.add(SaldoDia(dia, saldo))
             dia = dia.plusDays(1)

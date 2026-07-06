@@ -79,6 +79,12 @@ class SaldoCalculatorTest {
     }
 
     @Test
+    fun `dia util credita valor diario customizado`() {
+        val serie = SaldoCalculator.serieDoMes(dia(1), emptyMap(), creditoDiaUtilCentavos = 35_00L)
+        assertEquals(35_00L, serie.single().saldoCentavos)
+    }
+
+    @Test
     fun `ehDiaUtil reconhece semana fim de semana e feriado`() {
         assertTrue(SaldoCalculator.ehDiaUtil(dia(1)))            // segunda
         assertFalse(SaldoCalculator.ehDiaUtil(dia(6)))           // sábado

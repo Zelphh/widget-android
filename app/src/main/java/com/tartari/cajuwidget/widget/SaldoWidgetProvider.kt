@@ -9,8 +9,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.TypedValue
 import android.widget.RemoteViews
+import com.tartari.cajuwidget.BuildConfig
 import com.tartari.cajuwidget.R
 import com.tartari.cajuwidget.data.GastoRepository
+import com.tartari.cajuwidget.data.SaldoTotalRepository
 import com.tartari.cajuwidget.domain.Feriados
 import com.tartari.cajuwidget.domain.SaldoCalculator
 import com.tartari.cajuwidget.ui.LancamentoManualActivity
@@ -92,11 +94,14 @@ class SaldoWidgetProvider : AppWidgetProvider() {
         ) {
             val hoje = LocalDate.now()
             val gastos = GastoRepository.get(context).gastosPorDia(hoje.monthValue, hoje.year)
-            val serie = SaldoCalculator.serieDoMes(hoje, gastos, Feriados.datas)
+            val serie = SaldoCalculator.serieDoMes(hoje, gastos, Feriados.datas, BuildConfig.VALOR_DIARIO_CENTAVOS)
             val saldoAtual = serie.last().saldoCentavos
 
+            val totalReal = SaldoTotalRepository.get(context)
+                .aplicarCreditosPendentes(hoje, Feriados.datas)
+
             val (larguraPx, alturaPx) = dimensoesDoGrafico(context, mgr, widgetId)
-            val bitmap = ChartRenderer.render(serie, larguraPx, alturaPx)
+            val bitmap = ChartRenderer.render(serie, larguraPx, alturaPx, formatarReais(totalReal))
 
             val views = RemoteViews(context.packageName, R.layout.widget_saldo).apply {
                 setImageViewBitmap(R.id.imagem_grafico, bitmap)

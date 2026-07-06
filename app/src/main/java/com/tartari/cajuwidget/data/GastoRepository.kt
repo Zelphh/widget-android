@@ -7,7 +7,10 @@ import java.time.LocalDate
  * Único ponto de escrita/leitura de gastos.
  * Retenção: meses passados ficam no banco (histórico preservado).
  */
-class GastoRepository private constructor(private val dao: GastoDao) {
+class GastoRepository private constructor(
+    private val dao: GastoDao,
+    private val saldoTotal: SaldoTotalRepository,
+) {
 
     suspend fun salvarGasto(
         valorCentavos: Long,
@@ -24,6 +27,7 @@ class GastoRepository private constructor(private val dao: GastoDao) {
                 criadoEm = System.currentTimeMillis(),
             )
         )
+        saldoTotal.registrarGasto(valorCentavos)
     }
 
     /** Total gasto por dia (centavos) no mês/ano informados. */
@@ -38,8 +42,10 @@ class GastoRepository private constructor(private val dao: GastoDao) {
 
         fun get(context: Context): GastoRepository =
             instancia ?: synchronized(this) {
-                instancia ?: GastoRepository(AppDatabase.get(context).gastoDao())
-                    .also { instancia = it }
+                instancia ?: GastoRepository(
+                    AppDatabase.get(context).gastoDao(),
+                    SaldoTotalRepository.get(context),
+                ).also { instancia = it }
             }
     }
 }

@@ -22,7 +22,12 @@ object ChartRenderer {
     private const val COR_LINHA_ZERO = 0x66FFFFFF
     private const val COR_TEXTO = 0xB3FFFFFF.toInt()
 
-    fun render(serie: List<SaldoDia>, larguraPx: Int, alturaPx: Int): Bitmap {
+    fun render(
+        serie: List<SaldoDia>,
+        larguraPx: Int,
+        alturaPx: Int,
+        totalRealTexto: String? = null,
+    ): Bitmap {
         val bitmap = Bitmap.createBitmap(larguraPx, alturaPx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         if (serie.isEmpty()) return bitmap
@@ -30,7 +35,10 @@ object ChartRenderer {
         val densidade = larguraPx / 320f
         val textoAltura = 12f * densidade
         val padding = 4f * densidade
-        val areaTopo = padding
+        // Reserva uma faixa no topo para o rótulo do saldo real do cartão,
+        // espelhando a faixa já reservada embaixo para os rótulos de dia.
+        val bandaTopo = if (totalRealTexto != null) textoAltura + 2f * densidade else 0f
+        val areaTopo = padding + bandaTopo
         val areaBase = alturaPx - padding - textoAltura - 2f * densidade
         val areaAltura = areaBase - areaTopo
 
@@ -79,6 +87,15 @@ object ChartRenderer {
             val diaDoMes = ponto.data.dayOfMonth
             val x = i * passo + passo / 2
             canvas.drawText(diaDoMes.toString(), x, yTexto, paintTexto)
+        }
+
+        if (totalRealTexto != null) {
+            val paintTotal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = COR_TEXTO
+                textSize = textoAltura
+                textAlign = Paint.Align.RIGHT
+            }
+            canvas.drawText(totalRealTexto, larguraPx - padding, padding + textoAltura, paintTotal)
         }
 
         return bitmap

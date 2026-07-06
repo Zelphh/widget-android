@@ -28,4 +28,16 @@ class ParseValorCentavosTest {
 
     @Test
     fun `rejeita texto`() = assertNull(parse("abc"))
+
+    @Test
+    fun `aceita negativo inteiro`() = assertEquals(-30_00L, parse("-30"))
+
+    @Test
+    fun `aceita negativo decimal`() = assertEquals(-23_50L, parse("-23,50"))
+
+    @Test
+    fun `aceita negativo com um digito decimal`() = assertEquals(-12_50L, parse("-12,5"))
+
+    @Test
+    fun `aceita negativo com prefixo R$`() = assertEquals(-5_00L, parse("R$ -5,00"))
 }
