@@ -34,7 +34,7 @@ operador de chamada `&` antes: `& $ADB devices`, não `$ADB devices` sozinho
 ./gradlew :app:assembleDebug -PsaldoInicialCentavos=50000 -PvalorDiarioCentavos=3500
 
 # Mesma coisa via variável de ambiente em vez de -P
-SALDO_INICIAL_CENTAVOS=50000 VALOR_DIARIO_CENTAVOS=3500 ./gradlew :app:assembleDebug
+SALDO_INICIAL_CENTAVOS=50000 VALOR_DIARIO_CENTAVOS=3000 ./gradlew :app:assembleDebug
 
 # Rodar todos os testes unitários
 ./gradlew :app:testDebugUnitTest
