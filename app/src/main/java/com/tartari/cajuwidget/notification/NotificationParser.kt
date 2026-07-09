@@ -11,7 +11,17 @@ package com.tartari.cajuwidget.notification
  */
 object NotificationParser {
 
-    private val REGEX_VALOR = Regex("""R\$\s?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})""")
+    // "R$" seguido de espaço comum, espaço fixo (NBSP, U+00A0 — usado por apps
+    // financeiros para não quebrar linha entre o cifrão e o valor) ou nada.
+    private val REGEX_VALOR = Regex("""R\$[  ]?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})""")
+
+    // Âncora para o template confirmado "Compra de R$ X,XX ..., seu saldo ... é
+    // R$ Y,YY" — evita pegar o saldo do cartão quando ele aparece na mesma
+    // mensagem que a compra.
+    private val REGEX_VALOR_COMPRA = Regex(
+        """compra\s+de\s+R\$[  ]?(\d{1,3}(?:\.\d{3})*|\d+),(\d{2})""",
+        RegexOption.IGNORE_CASE,
+    )
 
     private val PALAVRAS_GASTO = listOf(
         "compra", "comprou", "pagamento", "pagou",
@@ -31,7 +41,7 @@ object NotificationParser {
         val t = texto.lowercase()
         if (PALAVRAS_IGNORAR.any { it in t }) return null
         if (PALAVRAS_GASTO.none { it in t }) return null
-        val match = REGEX_VALOR.find(texto) ?: return null
+        val match = REGEX_VALOR_COMPRA.find(texto) ?: REGEX_VALOR.find(texto) ?: return null
         val reais = match.groupValues[1].replace(".", "").toLong()
         val centavos = match.groupValues[2].toLong()
         return reais * 100 + centavos

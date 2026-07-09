@@ -49,4 +49,34 @@ class NotificationParserTest {
     fun `ignora texto sem valor`() {
         assertNull(NotificationParser.extrairValorGasto("Compra aprovada"))
     }
+
+    @Test
+    fun `usa o valor da compra e ignora o saldo do cartao na mesma notificacao`() {
+        val titulo = "Pagamento aprovado"
+        val texto = "Compra de R$ 28,40 em Kalzone APROVADA no CRÉDITO, seu saldo em " +
+            "AUXÍLIO ALIMENTAÇÃO é R$ 570,95. Use VOUCHER no próximo pagamento."
+        assertEquals(
+            28_40L,
+            NotificationParser.extrairValorGasto("$titulo $texto"),
+        )
+    }
+
+    @Test
+    fun `aceita espaco inquebravel entre o cifrao e o valor`() {
+        val texto = "Compra de R$ 28,40 em Kalzone APROVADA no CRÉDITO, seu saldo em " +
+            "AUXÍLIO ALIMENTAÇÃO é R$ 570,95."
+        assertEquals(
+            28_40L,
+            NotificationParser.extrairValorGasto(texto),
+        )
+    }
+
+    @Test
+    fun `nao se confunde se o saldo aparecer antes da compra no texto`() {
+        val texto = "Seu saldo em AUXÍLIO ALIMENTAÇÃO é R$ 570,95. Compra de R$ 28,40 em Kalzone."
+        assertEquals(
+            28_40L,
+            NotificationParser.extrairValorGasto(texto),
+        )
+    }
 }

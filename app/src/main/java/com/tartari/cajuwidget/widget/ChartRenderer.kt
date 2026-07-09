@@ -26,7 +26,7 @@ object ChartRenderer {
         serie: List<SaldoDia>,
         larguraPx: Int,
         alturaPx: Int,
-        totalRealTexto: String? = null,
+        mostrarValorDiario: Boolean = false,
     ): Bitmap {
         val bitmap = Bitmap.createBitmap(larguraPx, alturaPx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -35,11 +35,13 @@ object ChartRenderer {
         val densidade = larguraPx / 320f
         val textoAltura = 12f * densidade
         val padding = 4f * densidade
-        // Reserva uma faixa no topo para o rótulo do saldo real do cartão,
-        // espelhando a faixa já reservada embaixo para os rótulos de dia.
-        val bandaTopo = if (totalRealTexto != null) textoAltura + 2f * densidade else 0f
-        val areaTopo = padding + bandaTopo
-        val areaBase = alturaPx - padding - textoAltura - 2f * densidade
+        // Quando os rótulos de valor por barra estão ativos, reserva uma faixa
+        // extra em cima (para a barra mais alta) e embaixo (para a mais
+        // negativa), para o texto não ser cortado nem colidir com os números
+        // de dia.
+        val bandaValor = if (mostrarValorDiario) textoAltura + 2f * densidade else 0f
+        val areaTopo = padding + bandaValor
+        val areaBase = alturaPx - padding - textoAltura - 2f * densidade - bandaValor
         val areaAltura = areaBase - areaTopo
 
         // Escala: espaço acima e abaixo do zero proporcional aos extremos.
@@ -78,6 +80,29 @@ object ChartRenderer {
 
         canvas.drawLine(0f, zeroY, larguraPx.toFloat(), zeroY, paintLinha)
 
+        if (mostrarValorDiario) {
+            val paintValor = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = COR_TEXTO
+                textAlign = Paint.Align.CENTER
+            }
+            val tamanhoBase = textoAltura.coerceAtMost(passo * 0.62f)
+            val tamanhoMinimo = 6f * densidade
+            serie.forEachIndexed { i, ponto ->
+                val texto = formatarValorAbreviado(ponto.saldoCentavos)
+                val tamanho = tamanhoDeFonteParaRotulo(texto, passo, tamanhoBase, tamanhoMinimo)
+                if (tamanho <= 0f) return@forEachIndexed
+                paintValor.textSize = tamanho
+                val alturaBarra = areaAltura * (ponto.saldoCentavos / amplitude)
+                val x = i * passo + passo / 2
+                val y = if (alturaBarra >= 0) {
+                    zeroY - alturaBarra - 2f * densidade
+                } else {
+                    zeroY - alturaBarra + tamanho + 2f * densidade
+                }
+                canvas.drawText(texto, x, y, paintValor)
+            }
+        }
+
         // Rótulo do dia do mês em todos os pontos do eixo X.
         // Tamanho do texto limitado à largura de cada barra, para não sobrepor
         // os vizinhos quando o mês avança e há mais pontos no gráfico.
@@ -89,15 +114,32 @@ object ChartRenderer {
             canvas.drawText(diaDoMes.toString(), x, yTexto, paintTexto)
         }
 
-        if (totalRealTexto != null) {
-            val paintTotal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = COR_TEXTO
-                textSize = textoAltura
-                textAlign = Paint.Align.RIGHT
-            }
-            canvas.drawText(totalRealTexto, larguraPx - padding, padding + textoAltura, paintTotal)
-        }
-
         return bitmap
+    }
+
+    /** Formata o saldo de forma compacta para o rótulo por barra (sem centavos). */
+    fun formatarValorAbreviado(centavos: Long): String {
+        val negativo = centavos < 0
+        val reaisAbs = (if (negativo) -centavos else centavos) / 100
+        return if (negativo) "-R$$reaisAbs" else "R$$reaisAbs"
+    }
+
+    /**
+     * Tamanho de fonte (px) para [texto] caber em uma fatia de [passoPx] de
+     * largura, sem Paint.measureText (mantém a função testável sem Robolectric).
+     * Retorna 0f quando nem [tamanhoMinimo] cabe — sinal para o chamador pular
+     * o rótulo daquela barra em vez de sobrepor os vizinhos.
+     */
+    fun tamanhoDeFonteParaRotulo(
+        texto: String,
+        passoPx: Float,
+        tamanhoBase: Float,
+        tamanhoMinimo: Float,
+        fatorLarguraPorCaractere: Float = 0.62f,
+    ): Float {
+        if (texto.isEmpty() || passoPx <= 0f) return 0f
+        val tamanhoQueCabe = passoPx / (texto.length * fatorLarguraPorCaractere)
+        val tamanho = minOf(tamanhoBase, tamanhoQueCabe)
+        return if (tamanho < tamanhoMinimo) 0f else tamanho
     }
 }

@@ -11,6 +11,7 @@ import android.util.TypedValue
 import android.widget.RemoteViews
 import com.tartari.cajuwidget.BuildConfig
 import com.tartari.cajuwidget.R
+import com.tartari.cajuwidget.data.ConfiguracaoGraficoRepository
 import com.tartari.cajuwidget.data.GastoRepository
 import com.tartari.cajuwidget.data.SaldoTotalRepository
 import com.tartari.cajuwidget.domain.Feriados
@@ -101,10 +102,17 @@ class SaldoWidgetProvider : AppWidgetProvider() {
                 .aplicarCreditosPendentes(hoje, Feriados.datas)
 
             val (larguraPx, alturaPx) = dimensoesDoGrafico(context, mgr, widgetId)
-            val bitmap = ChartRenderer.render(serie, larguraPx, alturaPx, formatarReais(totalReal))
+            val mostrarValorDiario = ConfiguracaoGraficoRepository.get(context).mostrarValorDiario()
+            val bitmap = ChartRenderer.render(
+                serie,
+                larguraPx,
+                alturaPx,
+                mostrarValorDiario = mostrarValorDiario,
+            )
 
             val views = RemoteViews(context.packageName, R.layout.widget_saldo).apply {
                 setImageViewBitmap(R.id.imagem_grafico, bitmap)
+                setTextViewText(R.id.texto_saldo_real, formatarReais(totalReal))
                 setTextViewText(R.id.texto_saldo, formatarReais(saldoAtual))
                 setInt(
                     R.id.texto_saldo, "setTextColor",

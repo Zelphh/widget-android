@@ -7,6 +7,7 @@
     <string name="titulo_lancamento">Lançar gasto</string>
     <string name="rotulo_data">Selecionar data do gasto</string>
     <string name="dica_valor">Valor (ex.: 23,50)</string>
+    <string name="rotulo_mostrar_valor_diario">Mostrar saldo de cada dia no gráfico</string>
     <string name="salvar">Salvar</string>
     <string name="gasto_salvo">Gasto salvo</string>
     <string name="erro_valor_invalido">Valor inválido</string>

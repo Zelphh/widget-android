@@ -21,6 +21,14 @@
             android:textSize="12sp" />
 
         <TextView
+            android:id="@+id/texto_saldo_real"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:textColor="#B3FFFFFF"
+            android:textSize="13sp" />
+
+        <TextView
             android:id="@+id/texto_saldo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

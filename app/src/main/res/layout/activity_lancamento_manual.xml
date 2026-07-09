@@ -32,6 +32,14 @@
         android:minHeight="56dp"
         android:textSize="18sp" />
 
+    <Switch
+        android:id="@+id/alternador_mostrar_valor_diario"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="@string/rotulo_mostrar_valor_diario"
+        android:textSize="16sp" />
+
     <Button
         android:id="@+id/botao_salvar"
         android:layout_width="match_parent"

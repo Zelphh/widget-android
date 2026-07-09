@@ -5,8 +5,10 @@ import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Switch
 import android.widget.Toast
 import com.tartari.cajuwidget.R
+import com.tartari.cajuwidget.data.ConfiguracaoGraficoRepository
 import com.tartari.cajuwidget.data.GastoRepository
 import com.tartari.cajuwidget.data.Origem
 import com.tartari.cajuwidget.widget.WidgetUpdateScheduler
@@ -36,9 +38,11 @@ class LancamentoManualActivity : Activity() {
         val campoValor = findViewById<EditText>(R.id.campo_valor)
         val botaoData = findViewById<Button>(R.id.botao_data)
         val botaoSalvar = findViewById<Button>(R.id.botao_salvar)
+        val alternadorValorDiario = findViewById<Switch>(R.id.alternador_mostrar_valor_diario)
 
         atualizarTextoData(botaoData)
         botaoData.setOnClickListener { abrirSeletorData(botaoData) }
+        configurarAlternadorValorDiario(alternadorValorDiario)
 
         botaoSalvar.setOnClickListener {
             val valor = parseValorCentavos(campoValor.text.toString())
@@ -65,6 +69,28 @@ class LancamentoManualActivity : Activity() {
 
     private fun atualizarTextoData(botaoData: Button) {
         botaoData.text = dataSelecionada.format(formatoData)
+    }
+
+    /**
+     * Carrega o estado salvo antes de conectar o listener, para o ajuste
+     * inicial do Switch não disparar uma escrita/refresh espúrios.
+     */
+    private fun configurarAlternadorValorDiario(alternador: Switch) {
+        escopo.launch {
+            val ativo = withContext(Dispatchers.IO) {
+                ConfiguracaoGraficoRepository.get(applicationContext).mostrarValorDiario()
+            }
+            alternador.isChecked = ativo
+            alternador.setOnCheckedChangeListener { _, novoValor ->
+                escopo.launch {
+                    withContext(Dispatchers.IO) {
+                        ConfiguracaoGraficoRepository.get(applicationContext)
+                            .definirMostrarValorDiario(novoValor)
+                    }
+                    WidgetUpdateScheduler.atualizarAgora(applicationContext)
+                }
+            }
+        }
     }
 
     private fun abrirSeletorData(botaoData: Button) {
